@@ -21,6 +21,7 @@ class MainEXT:
         Store current value of `param_name` from each knob listed in self.source_table (opfind1)
         into the corresponding row in self.target_table without deleting rows.
         """
+        print("store data")
         if not self.target_table or not self.source_table:
             print("[MyExt] source_table or target_table not found")
             return
@@ -72,13 +73,41 @@ class MainEXT:
     def ApplyAssignments(self):
         """
         Loop over rows in target_table and set parameters.
-        Assumes table format: op_path | par_name | val
+        Works with replicants: uses stable identifiers to match the operator.
+        Assumes table format:
+            stack | # | ... | param columns ...
         """
-        for row in self.target_table.rows()[1:]:  # skip header row
-            op_path = row[0].val
-            par_name = row[1].val
-            val = row[2].val
-            self.StoreData(op_path, par_name, val)
+        print("applying assignments")
+        table = self.target_table
+        num_rows = table.numRows
+        num_cols = table.numCols
+
+        # find column indices
+        stack_col = 0  # assuming first col is 'stack'
+        id_col = 1  # assuming second col is '#'
+        # other columns are parameters
+        param_cols = [c for c in range(num_cols) if c not in (stack_col, id_col)]
+
+        for r in range(1, num_rows):  # skip header
+            stack_val = table[r, stack_col].val
+            knob_id = table[r, id_col].val
+
+            # find the replicant by some stable identifier
+            # example: name = knob_id or combine stack+id
+            op_path = knob_id  # adjust if needed
+            knob = self.oop(op_path)
+            if not knob:
+                debug(f"Replicant {op_path} not found, skipping row {r}")
+                continue
+
+            # apply stored parameter values
+            for c in param_cols:
+                par_name = table[0, c].val  # header row = parameter name
+                val = table[r, c].val
+                try:
+                    self.StoreData(op_path, par_name, val)
+                except Exception as e:
+                    debug(f"Error applying {op_path}.{par_name} = {val}: {e}")
 
     def ResetKnobs(self, reset_val=""):
         """
