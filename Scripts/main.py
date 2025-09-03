@@ -134,3 +134,52 @@ class MainEXT:
                         table[r, c] = reset_val
                     except Exception as e:
                         debug(f"Error resetting cell {r},{c}: {e}")
+
+    # ------------------------------------- |
+    #           HELPER-FUNCTIONS            |
+    # ------------------------------------- |
+
+    def StoreHelper(self, param_names=None):
+        """
+        Store current values of parameters listed in param_names into target_table.
+        """
+        if param_names is None:
+            param_names = [
+                "Knoblevelcolorr",
+                "Knoblevelcolorg",
+                "Knoblevelcolorb",
+                "Mfthue",
+                "Bindparameterref",
+                "Value0",
+            ]
+
+        for param in param_names:
+            self.StoreCurrentValues(param_name=param)
+
+    def RecreateReplicants(self, replicator_op="replicator1"):
+        """
+        Recreate all replicants for the given replicator COMP.
+        """
+        replicator = op(replicator_op)
+        if replicator:
+            replicator.par.recreateall.pulse()
+        else:
+            debug(f"Replicator '{replicator_op}' not found!")
+
+    def DelayHelper(self, func, delay_frames=10):
+        """
+        Run any function after a delay of delay_frames.
+        """
+        run(func, delayFrames=delay_frames)
+
+    def StoreRecreateApply(
+        self, param_names=None, replicator_op="replicator1", apply_delay=10
+    ):
+        """
+        Convenience method to store -> recreate -> apply assignments.
+        """
+        self.StoreHelper(param_names)
+        self.RecreateReplicants(replicator_op)
+
+        # delayed application
+        self.DelayHelper(self.ApplyAssignments, apply_delay)

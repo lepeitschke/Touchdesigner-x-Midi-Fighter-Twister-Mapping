@@ -32,10 +32,6 @@ def onReplicate(comp, allOps, newOps, template, master):
         # c.par.clone = comp.par.master
     pass
 
-    # schedule ApplyAssignments after table updates propagate
-    def delayedApply():
-        parent().ApplyAssignments()
-
-    run(delayedApply, delayFrames=120)
+    parent().DelayHelper(parent().ApplyAssignments, delay_frames=120)
 
     return
