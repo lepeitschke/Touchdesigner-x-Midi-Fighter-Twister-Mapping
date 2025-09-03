@@ -15,7 +15,7 @@ class MainEXT:
             if cell.val == col_name:
                 return i
         return None  # not found
-    
+
     def StoreCurrentValues(self, param_name):
         """
         Store current value of `param_name` from each knob listed in self.source_table (opfind1)
@@ -52,9 +52,6 @@ class MainEXT:
             else:
                 print(f"[MyExt] Knob '{knob_name}' has no parameter '{param_name}'")
 
-
-
-
     def StoreData(self, op_path, par_name, val):
         """
         Set the parameter on a dynamically referenced operator.
@@ -64,7 +61,7 @@ class MainEXT:
         """
 
         try:
-            knob = self.oop(op_path)   # resolve operator
+            knob = self.oop(op_path)  # resolve operator
             if knob:
                 knob.par[par_name] = val
             else:
@@ -82,8 +79,29 @@ class MainEXT:
             par_name = row[1].val
             val = row[2].val
             self.StoreData(op_path, par_name, val)
-    
-    def Easy(self):
-        print("Hello")
 
-        
+    def ResetKnobs(self, reset_val=""):
+        """
+        Reset all knob-related values in target_table, except the 'stack' and '#' columns.
+        Keeps header row intact. Default reset value = 0.
+        Works by indexing through the table like op('tableDAT')[row, col].
+        """
+        table = self.target_table
+        num_rows = table.numRows
+        num_cols = table.numCols
+
+        # find indices of columns to skip by checking header row (row 0)
+        skip_cols = []
+        for c in range(num_cols):
+            header_val = table[0, c].val
+            if header_val in ["stack", "#"]:
+                skip_cols.append(c)
+
+        # iterate over data rows (skip header row)
+        for r in range(1, num_rows):
+            for c in range(num_cols):
+                if c not in skip_cols:
+                    try:
+                        table[r, c] = reset_val
+                    except Exception as e:
+                        debug(f"Error resetting cell {r},{c}: {e}")
